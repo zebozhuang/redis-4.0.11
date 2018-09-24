@@ -56,7 +56,7 @@
 #include "server.h"
 
 /* ------------------------- Buffer I/O implementation ----------------------- */
-
+/* I/O缓存实现 */
 /* Returns 1 or 0 for success/failure. */
 static size_t rioBufferWrite(rio *r, const void *buf, size_t len) {
     r->io.buffer.ptr = sdscatlen(r->io.buffer.ptr,(char*)buf,len);
@@ -65,6 +65,7 @@ static size_t rioBufferWrite(rio *r, const void *buf, size_t len) {
 }
 
 /* Returns 1 or 0 for success/failure. */
+/* 从I/O缓存读数据，成功返回1，失败返回0， 实现方式是内存拷贝, 并把pos指向新的位置 */
 static size_t rioBufferRead(rio *r, void *buf, size_t len) {
     if (sdslen(r->io.buffer.ptr)-r->io.buffer.pos < len)
         return 0; /* not enough buffer to return len bytes. */
@@ -74,17 +75,20 @@ static size_t rioBufferRead(rio *r, void *buf, size_t len) {
 }
 
 /* Returns read/write position in buffer. */
+/* 从I/O缓冲读取位置 */
 static off_t rioBufferTell(rio *r) {
     return r->io.buffer.pos;
 }
 
 /* Flushes any buffer to target device if applicable. Returns 1 on success
  * and 0 on failures. */
+/* 刷新I/O缓冲 */
 static int rioBufferFlush(rio *r) {
     UNUSED(r);
     return 1; /* Nothing to do, our write just appends to the buffer. */
 }
 
+/* I/O缓冲对象和接口 */
 static const rio rioBufferIO = {
     rioBufferRead,
     rioBufferWrite,
@@ -97,6 +101,7 @@ static const rio rioBufferIO = {
     { { NULL, 0 } } /* union for io-specific vars */
 };
 
+/* I/O初始化 */
 void rioInitWithBuffer(rio *r, sds s) {
     *r = rioBufferIO;
     r->io.buffer.ptr = s;
@@ -104,8 +109,9 @@ void rioInitWithBuffer(rio *r, sds s) {
 }
 
 /* --------------------- Stdio file pointer implementation ------------------- */
-
+/* 标准文件指针实现 */
 /* Returns 1 or 0 for success/failure. */
+/* 文件写入，成功返回1，失败返回0 */
 static size_t rioFileWrite(rio *r, const void *buf, size_t len) {
     size_t retval;
 
@@ -123,21 +129,25 @@ static size_t rioFileWrite(rio *r, const void *buf, size_t len) {
 }
 
 /* Returns 1 or 0 for success/failure. */
+/* 文件读取，成功返回1，失败返回0 */
 static size_t rioFileRead(rio *r, void *buf, size_t len) {
     return fread(buf,len,1,r->io.file.fp);
 }
 
 /* Returns read/write position in file. */
+/* 文件数据位置 */
 static off_t rioFileTell(rio *r) {
     return ftello(r->io.file.fp);
 }
 
 /* Flushes any buffer to target device if applicable. Returns 1 on success
  * and 0 on failures. */
+/* 文件刷新 */
 static int rioFileFlush(rio *r) {
     return (fflush(r->io.file.fp) == 0) ? 1 : 0;
 }
 
+/* 文件对象和接口 */
 static const rio rioFileIO = {
     rioFileRead,
     rioFileWrite,
