@@ -101,6 +101,7 @@ intset *intsetNew(void) {
     return is;
 }
 
+// 重新调整集合
 /* Resize the intset */
 static intset *intsetResize(intset *is, uint32_t len) {
     uint32_t size = len*intrev32ifbe(is->encoding);
