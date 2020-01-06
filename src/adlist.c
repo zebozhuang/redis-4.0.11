@@ -95,10 +95,12 @@ list *listAddNodeHead(list *list, void *value)
 {
     listNode *node;
 
+    // 申请内存节点
     if ((node = zmalloc(sizeof(*node))) == NULL)
         return NULL;
+    // 赋值
     node->value = value;
-    if (list->len == 0) {
+    if (list->len == 0) { // 头结点
         list->head = list->tail = node;
         node->prev = node->next = NULL;
     } else {
@@ -117,6 +119,7 @@ list *listAddNodeHead(list *list, void *value)
  * On error, NULL is returned and no operation is performed (i.e. the
  * list remains unaltered).
  * On success the 'list' pointer you pass to the function is returned. */
+// 添加节点尾部
 list *listAddNodeTail(list *list, void *value)
 {
     listNode *node;
@@ -137,6 +140,7 @@ list *listAddNodeTail(list *list, void *value)
     return list;
 }
 
+// 插入节点, O(1)时间
 list *listInsertNode(list *list, listNode *old_node, void *value, int after) {
     listNode *node;
 
@@ -170,6 +174,7 @@ list *listInsertNode(list *list, listNode *old_node, void *value, int after) {
  * It's up to the caller to free the private value of the node.
  *
  * This function can't fail. */
+// 删除节点,O(1)
 void listDelNode(list *list, listNode *node)
 {
     if (node->prev)
@@ -189,6 +194,7 @@ void listDelNode(list *list, listNode *node)
  * call to listNext() will return the next element of the list.
  *
  * This function can't fail. */
+// 返回一条指标迭代器O(1)
 listIter *listGetIterator(list *list, int direction)
 {
     listIter *iter;
@@ -203,6 +209,7 @@ listIter *listGetIterator(list *list, int direction)
 }
 
 /* Release the iterator memory */
+// 释放迭代器内存
 void listReleaseIterator(listIter *iter) {
     zfree(iter);
 }
@@ -253,6 +260,7 @@ listNode *listNext(listIter *iter)
  * the original node is used as value of the copied node.
  *
  * The original list both on success or error is never modified. */
+// 复制列表O(n)
 list *listDup(list *orig)
 {
     list *copy;
@@ -293,6 +301,7 @@ list *listDup(list *orig)
  * On success the first matching node pointer is returned
  * (search starts from head). If no matching node exists
  * NULL is returned. */
+// 列表查找key,O(n)
 listNode *listSearchKey(list *list, void *key)
 {
     listIter iter;
@@ -318,6 +327,7 @@ listNode *listSearchKey(list *list, void *key)
  * and so on. Negative integers are used in order to count
  * from the tail, -1 is the last element, -2 the penultimate
  * and so on. If the index is out of range NULL is returned. */
+// 返回某个位置节点O(n)
 listNode *listIndex(list *list, long index) {
     listNode *n;
 
@@ -333,6 +343,7 @@ listNode *listIndex(list *list, long index) {
 }
 
 /* Rotate the list removing the tail node and inserting it to the head. */
+// 反转列表
 void listRotate(list *list) {
     listNode *tail = list->tail;
 
@@ -350,6 +361,7 @@ void listRotate(list *list) {
 
 /* Add all the elements of the list 'o' at the end of the
  * list 'l'. The list 'other' remains empty but otherwise valid. */
+// 列表列表合并
 void listJoin(list *l, list *o) {
     if (o->head)
         o->head->prev = l->tail;
