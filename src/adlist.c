@@ -38,6 +38,7 @@
  * by the user before to call AlFreeList().
  *
  * On error, NULL is returned. Otherwise the pointer to the new list. */
+// 创建列表
 list *listCreate(void)
 {
     struct list *list;
@@ -53,26 +54,30 @@ list *listCreate(void)
 }
 
 /* Remove all the elements from the list without destroying the list itself. */
+// 清除列表所有
 void listEmpty(list *list)
 {
     unsigned long len;
-    listNode *current, *next;
+    listNode *current, *next; // 声明当前节点和下个节点
 
+    // 当前节点
     current = list->head;
+    // 节点长度
     len = list->len;
     while(len--) {
         next = current->next;
-        if (list->free) list->free(current->value);
-        zfree(current);
+        if (list->free) list->free(current->value); // 释放节点值
+        zfree(current); // 释放内存
         current = next;
     }
-    list->head = list->tail = NULL;
-    list->len = 0;
+    list->head = list->tail = NULL; // 前后赋值空
+    list->len = 0; // 长度为0
 }
 
 /* Free the whole list.
  *
  * This function can't fail. */
+// 销毁列表
 void listRelease(list *list)
 {
     listEmpty(list);
@@ -85,6 +90,7 @@ void listRelease(list *list)
  * On error, NULL is returned and no operation is performed (i.e. the
  * list remains unaltered).
  * On success the 'list' pointer you pass to the function is returned. */
+// 添加节点到头部
 list *listAddNodeHead(list *list, void *value)
 {
     listNode *node;
