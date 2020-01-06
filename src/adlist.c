@@ -362,6 +362,7 @@ void listRotate(list *list) {
 /* Add all the elements of the list 'o' at the end of the
  * list 'l'. The list 'other' remains empty but otherwise valid. */
 // 列表列表合并
+
 void listJoin(list *l, list *o) {
     if (o->head)
         o->head->prev = l->tail;
