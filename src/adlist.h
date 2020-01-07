@@ -32,6 +32,7 @@
 #define __ADLIST_H__
 
 /* Node, List, and Iterator are the only data structures used currently. */
+// 定义接口
 
 typedef struct listNode {
     struct listNode *prev;
