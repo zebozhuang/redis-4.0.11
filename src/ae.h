@@ -30,6 +30,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// 事件结构和接口
+
 #ifndef __AE_H__
 #define __AE_H__
 
@@ -112,24 +114,25 @@ typedef struct aeEventLoop {
 } aeEventLoop;
 
 /* Prototypes */
-aeEventLoop *aeCreateEventLoop(int setsize);
-void aeDeleteEventLoop(aeEventLoop *eventLoop);
-void aeStop(aeEventLoop *eventLoop);
+// 接口原型
+aeEventLoop *aeCreateEventLoop(int setsize);  // 创建事件循环
+void aeDeleteEventLoop(aeEventLoop *eventLoop);  // 删除事件循环
+void aeStop(aeEventLoop *eventLoop); // 事件停止
 int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
-        aeFileProc *proc, void *clientData);
-void aeDeleteFileEvent(aeEventLoop *eventLoop, int fd, int mask);
-int aeGetFileEvents(aeEventLoop *eventLoop, int fd);
+        aeFileProc *proc, void *clientData);  // 创建文件事件
+void aeDeleteFileEvent(aeEventLoop *eventLoop, int fd, int mask);  // 删除文件事件
+int aeGetFileEvents(aeEventLoop *eventLoop, int fd); // 获取文件事件
 long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
         aeTimeProc *proc, void *clientData,
-        aeEventFinalizerProc *finalizerProc);
-int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id);
-int aeProcessEvents(aeEventLoop *eventLoop, int flags);
-int aeWait(int fd, int mask, long long milliseconds);
-void aeMain(aeEventLoop *eventLoop);
-char *aeGetApiName(void);
-void aeSetBeforeSleepProc(aeEventLoop *eventLoop, aeBeforeSleepProc *beforesleep);
-void aeSetAfterSleepProc(aeEventLoop *eventLoop, aeBeforeSleepProc *aftersleep);
-int aeGetSetSize(aeEventLoop *eventLoop);
-int aeResizeSetSize(aeEventLoop *eventLoop, int setsize);
+        aeEventFinalizerProc *finalizerProc); // 创建事件事件
+int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id); // 删除事件事件
+int aeProcessEvents(aeEventLoop *eventLoop, int flags);  // 处理事件
+int aeWait(int fd, int mask, long long milliseconds);  // 等待
+void aeMain(aeEventLoop *eventLoop);  // 事件入口
+char *aeGetApiName(void);  // api?
+void aeSetBeforeSleepProc(aeEventLoop *eventLoop, aeBeforeSleepProc *beforesleep);  // 设置处理函数
+void aeSetAfterSleepProc(aeEventLoop *eventLoop, aeBeforeSleepProc *aftersleep);   // 设置处理函数
+int aeGetSetSize(aeEventLoop *eventLoop);  // 获取集合大小
+int aeResizeSetSize(aeEventLoop *eventLoop, int setsize);  // 重置集合大小
 
 #endif
