@@ -148,14 +148,15 @@ typedef void (dictScanBucketFunction)(void *privdata, dictEntry **bucketref);
 #define dictIsRehashing(d) ((d)->rehashidx != -1)
 
 /* API */
-dict *dictCreate(dictType *type, void *privDataPtr);
-int dictExpand(dict *d, unsigned long size);
-int dictAdd(dict *d, void *key, void *val);
-dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing);
-dictEntry *dictAddOrFind(dict *d, void *key);
-int dictReplace(dict *d, void *key, void *val);
-int dictDelete(dict *d, const void *key);
-dictEntry *dictUnlink(dict *ht, const void *key);
+// 接口
+dict *dictCreate(dictType *type, void *privDataPtr);  // 创建字典
+int dictExpand(dict *d, unsigned long size);          // 字典扩张
+int dictAdd(dict *d, void *key, void *val);           // 添加字典实体
+dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing); // 添加
+dictEntry *dictAddOrFind(dict *d, void *key);         // 添加或查找
+int dictReplace(dict *d, void *key, void *val);       // 字典代替
+int dictDelete(dict *d, const void *key);             // 字典删除
+dictEntry *dictUnlink(dict *ht, const void *key);     // 字典unlink
 void dictFreeUnlinkedEntry(dict *d, dictEntry *he);
 void dictRelease(dict *d);
 dictEntry * dictFind(dict *d, const void *key);
