@@ -57,7 +57,7 @@
 #include <sys/socket.h>
 
 /* Our shared "common" objects */
-
+/* 全局共享对象 */
 struct sharedObjectsStruct shared;
 
 /* Global vars that are actually used as constants. The following double
@@ -69,11 +69,12 @@ double R_Zero, R_PosInf, R_NegInf, R_Nan;
 /*================================= Globals ================================= */
 
 /* Global vars */
+/* 服务器对象 */
 struct redisServer server; /* Server global state */ /* redis 服务器 */
 volatile unsigned long lru_clock; /* Server global current LRU time. */ /* 设置lru时间 */
 
 /* Our command table.
- *
+ * 命令列表
  * Every entry is composed of the following fields:
  *
  * name: a string representing the command name.
@@ -124,6 +125,7 @@ volatile unsigned long lru_clock; /* Server global current LRU time. */ /* 设�
  *    Note that commands that may trigger a DEL as a side effect (like SET)
  *    are not fast commands.
  */
+/* 命令行列表: 命令、命令函数、参数、... */
 struct redisCommand redisCommandTable[] = {
     {"module",moduleCommand,-2,"as",0,NULL,0,0,0,0,0},
     {"get",getCommand,2,"rF",0,NULL,1,1,1,0,0},
@@ -311,7 +313,9 @@ struct redisCommand redisCommandTable[] = {
 
 /* Low level logging. To use only for very big messages, otherwise
  * serverLog() is to prefer. */
+/* 服务器日志设置 */
 void serverLogRaw(int level, const char *msg) {
+    // 日志级别： debug、info、notice、warning
     const int syslogLevelMap[] = { LOG_DEBUG, LOG_INFO, LOG_NOTICE, LOG_WARNING };
     const char *c = ".-*#";
     FILE *fp;
@@ -346,7 +350,7 @@ void serverLogRaw(int level, const char *msg) {
         fprintf(fp,"%d:%c %s %c %s\n",
             (int)getpid(),role_char, buf,c[level],msg);
     }
-    fflush(fp);
+    fflush(fp); /*刷新到文件 */
 
     if (!log_to_stdout) fclose(fp);
     if (server.syslog_enabled) syslog(syslogLevelMap[level], "%s", msg);
@@ -355,6 +359,7 @@ void serverLogRaw(int level, const char *msg) {
 /* Like serverLogRaw() but with printf-alike support. This is the function that
  * is used across the code. The raw version is only used in order to dump
  * the INFO output on crash. */
+/* 这个才是日志设置，raw那个是crash的时候使用 */
 void serverLog(int level, const char *fmt, ...) {
     va_list ap;
     char msg[LOG_MAX_LEN];
@@ -397,6 +402,7 @@ err:
 }
 
 /* Return the UNIX time in microseconds */
+/* 返回unix time，微秒级别 */
 long long ustime(void) {
     struct timeval tv;
     long long ust;
@@ -408,6 +414,7 @@ long long ustime(void) {
 }
 
 /* Return the UNIX time in milliseconds */
+/* 返回毫秒级别事件 */
 mstime_t mstime(void) {
     return ustime()/1000;
 }
@@ -429,19 +436,25 @@ void exitFromChild(int retcode) {
 /* This is a hash table type that uses the SDS dynamic strings library as
  * keys and redis objects as values (objects can hold SDS strings,
  * lists, sets). */
+/* 哈希表实现 */
 
+/* 释放数据 */
 void dictVanillaFree(void *privdata, void *val)
 {
     DICT_NOTUSED(privdata);
+    /* 释放数据 */
     zfree(val);
 }
 
+
+/* 列表释放 */
 void dictListDestructor(void *privdata, void *val)
 {
     DICT_NOTUSED(privdata);
     listRelease((list*)val);
 }
 
+/* sds结构字符串比较 */
 int dictSdsKeyCompare(void *privdata, const void *key1,
         const void *key2)
 {
@@ -450,12 +463,13 @@ int dictSdsKeyCompare(void *privdata, const void *key1,
 
     l1 = sdslen((sds)key1);
     l2 = sdslen((sds)key2);
-    if (l1 != l2) return 0;
-    return memcmp(key1, key2, l1) == 0;
+    if (l1 != l2) return 0; // 比较长度
+    return memcmp(key1, key2, l1) == 0; // 比较内容
 }
 
 /* A case insensitive version used for the command lookup table and other
  * places where case insensitive non binary-safe comparison is needed. */
+/* 字符串大小写不敏感比较 */
 int dictSdsKeyCaseCompare(void *privdata, const void *key1,
         const void *key2)
 {
@@ -464,6 +478,7 @@ int dictSdsKeyCaseCompare(void *privdata, const void *key1,
     return strcasecmp(key1, key2) == 0;
 }
 
+/* 对象销毁，引用计数-1 */
 void dictObjectDestructor(void *privdata, void *val)
 {
     DICT_NOTUSED(privdata);
@@ -472,6 +487,7 @@ void dictObjectDestructor(void *privdata, void *val)
     decrRefCount(val);
 }
 
+/* sds字符串销毁 */
 void dictSdsDestructor(void *privdata, void *val)
 {
     DICT_NOTUSED(privdata);
@@ -479,26 +495,30 @@ void dictSdsDestructor(void *privdata, void *val)
     sdsfree(val);
 }
 
+/* key 比较 */
 int dictObjKeyCompare(void *privdata, const void *key1,
         const void *key2)
 {
     const robj *o1 = key1, *o2 = key2;
     return dictSdsKeyCompare(privdata,o1->ptr,o2->ptr);
 }
-
+/* 字典key 哈希 */
 uint64_t dictObjHash(const void *key) {
     const robj *o = key;
     return dictGenHashFunction(o->ptr, sdslen((sds)o->ptr));
 }
 
+/* 字典sdskey 哈希 */
 uint64_t dictSdsHash(const void *key) {
     return dictGenHashFunction((unsigned char*)key, sdslen((char*)key));
 }
 
+/* key 大小写不敏感哈希 */
 uint64_t dictSdsCaseHash(const void *key) {
     return dictGenCaseHashFunction((unsigned char*)key, sdslen((char*)key));
 }
 
+/* 编码key比较 */
 int dictEncObjKeyCompare(void *privdata, const void *key1,
         const void *key2)
 {
@@ -509,14 +529,16 @@ int dictEncObjKeyCompare(void *privdata, const void *key1,
         o2->encoding == OBJ_ENCODING_INT)
             return o1->ptr == o2->ptr;
 
+    /* 解码 */
     o1 = getDecodedObject(o1);
     o2 = getDecodedObject(o2);
-    cmp = dictSdsKeyCompare(privdata,o1->ptr,o2->ptr);
+    cmp = dictSdsKeyCompare(privdata,o1->ptr,o2->ptr); /* 比较 */
     decrRefCount(o1);
     decrRefCount(o2);
     return cmp;
 }
 
+/* 哈希 */
 uint64_t dictEncObjHash(const void *key) {
     robj *o = (robj*) key;
 
