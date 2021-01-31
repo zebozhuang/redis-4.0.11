@@ -76,18 +76,19 @@ int spectrum_palette_mono[] = {0,233,234,235,237,239,241,243,245,247,249,251,253
 /* The actual palette in use. */
 int *spectrum_palette;
 int spectrum_palette_size;
-
+/* redis上下文 */
 static redisContext *context;
+/* 配置 */
 static struct config {
-    char *hostip;
-    int hostport;
-    char *hostsocket;
-    long repeat;
+    char *hostip; /* 主机ip */
+    int hostport; /* 主机端口 */
+    char *hostsocket;  /* 主机socket */
+    long repeat;     /* 重试?失败? */
     long interval;
-    int dbnum;
+    int dbnum;   /* 数据库 */
     int interactive;
-    int shutdown;
-    int monitor_mode;
+    int shutdown; /* 关机 */
+    int monitor_mode; /* 监控模式 */
     int pubsub_mode;
     int latency_mode;
     int latency_dist_mode;
@@ -136,7 +137,7 @@ static int cliConnect(int force);
 /*------------------------------------------------------------------------------
  * Utility functions
  *--------------------------------------------------------------------------- */
-
+/* 返回us时间 */
 static long long ustime(void) {
     struct timeval tv;
     long long ust;
@@ -147,10 +148,12 @@ static long long ustime(void) {
     return ust;
 }
 
+/* 返回ms时间 */
 static long long mstime(void) {
     return ustime()/1000;
 }
 
+/* 客户端提示刷新 */
 static void cliRefreshPrompt(void) {
     if (config.eval_ldb) return;
 
@@ -164,13 +167,14 @@ static void cliRefreshPrompt(void) {
     }
 
     /* Add [dbnum] if needed */
+    /* 添加端口提示 */
     if (config.dbnum != 0)
         prompt = sdscatfmt(prompt,"[%i]",config.dbnum);
 
     /* Copy the prompt in the static buffer. */
     prompt = sdscatlen(prompt,"> ",2);
     snprintf(config.prompt,sizeof(config.prompt),"%s",prompt);
-    sdsfree(prompt);
+    sdsfree(prompt); /* 释放内存 */
 }
 
 /* Return the name of the dotfile for the specified 'dotfilename'.
@@ -181,6 +185,7 @@ static void cliRefreshPrompt(void) {
  * The function returns NULL (if the file is /dev/null or cannot be
  * obtained for some error), or an SDS string that must be freed by
  * the user. */
+/* dotfile 路劲 */
 static sds getDotfilePath(char *envoverride, char *dotfilename) {
     char *path = NULL;
     sds dotPath = NULL;
@@ -205,10 +210,12 @@ static sds getDotfilePath(char *envoverride, char *dotfilename) {
 }
 
 /* URL-style percent decoding. */
+/* 判断字符类型 */
 #define isHexChar(c) (isdigit(c) || (c >= 'a' && c <= 'f'))
 #define decodeHexChar(c) (isdigit(c) ? c - '0' : c - 'a' + 10)
 #define decodeHex(h, l) ((decodeHexChar(h) << 4) + decodeHexChar(l))
 
+/* 百分号解码 */
 static sds percentDecode(const char *pe, size_t len) {
     const char *end = pe + len;
     sds ret = sdsempty();
@@ -238,6 +245,11 @@ static sds percentDecode(const char *pe, size_t len) {
     return ret;
 }
 
+/* Redis 数据库uri协议
+ * scheme: redis：//
+ * 认证：用户：密码@主机:端口
+ * 路径：/+db
+ * */
 /* Parse a URI and extract the server connection information.
  * URI scheme is based on the the provisional specification[1] excluding support
  * for query parameters. Valid URIs are:
@@ -254,6 +266,7 @@ static void parseRedisUri(const char *uri) {
     const char *userinfo, *username, *port, *host, *path;
 
     /* URI must start with a valid scheme. */
+    /* 验证schema是否正确 */
     if (strncasecmp(scheme, curr, strlen(scheme))) {
         fprintf(stderr,"Invalid URI scheme\n");
         exit(1);
@@ -262,6 +275,7 @@ static void parseRedisUri(const char *uri) {
     if (curr == end) return;
 
     /* Extract user info. */
+    /* 用户*/
     if ((userinfo = strchr(curr,'@'))) {
         if ((username = strchr(curr, ':')) && username < userinfo) {
             /* If provided, username is ignored. */
@@ -274,6 +288,7 @@ static void parseRedisUri(const char *uri) {
     if (curr == end) return;
 
     /* Extract host and port. */
+    /* 主机名+端口*/
     path = strchr(curr, '/');
     if (*curr != '/') {
         host = path ? path - 1 : end;
@@ -297,14 +312,15 @@ static void parseRedisUri(const char *uri) {
 #define CLI_HELP_COMMAND 1
 #define CLI_HELP_GROUP 2
 
+/* 帮助函数 */
 typedef struct {
-    int type;
-    int argc;
-    sds *argv;
-    sds full;
+    int type;  /* 类型: ? */
+    int argc;  /* 参数个数 */
+    sds *argv; /* 参数 */
+    sds full;  /* ? */
 
     /* Only used for help on commands */
-    struct commandHelp *org;
+    struct commandHelp *org; /* 命令行帮助 */
 } helpEntry;
 
 static helpEntry *helpEntries;
