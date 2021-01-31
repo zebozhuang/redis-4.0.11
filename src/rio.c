@@ -168,7 +168,7 @@ void rioInitWithFile(rio *r, FILE *fp) {
 }
 
 /* ------------------- File descriptors set implementation ------------------- */
-
+/* 文件描述符集合实现 */
 /* Returns 1 or 0 for success/failure.
  * The function returns success as long as we are able to correctly write
  * to at least one file descriptor.

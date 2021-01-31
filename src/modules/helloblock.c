@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
+/* 阻塞  */
 /* Reply callback for blocking command HELLO.BLOCK */
 int HelloBlock_Reply(RedisModuleCtx *ctx, RedisModuleString **argv, int argc) {
     REDISMODULE_NOT_USED(argv);

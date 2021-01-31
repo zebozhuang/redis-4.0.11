@@ -48,6 +48,9 @@
 
 #include "anet.h"
 
+/* 基本的tcp socket实现 z*/
+
+
 static void anetSetError(char *err, const char *fmt, ...)
 {
     va_list ap;
@@ -58,6 +61,7 @@ static void anetSetError(char *err, const char *fmt, ...)
     va_end(ap);
 }
 
+/* 设置句柄 是否为 阻塞 */
 int anetSetBlock(char *err, int fd, int non_block) {
     int flags;
 
@@ -69,9 +73,10 @@ int anetSetBlock(char *err, int fd, int non_block) {
         return ANET_ERR;
     }
 
+    /* 非阻塞 */
     if (non_block)
         flags |= O_NONBLOCK;
-    else
+    else /* 阻塞 */
         flags &= ~O_NONBLOCK;
 
     if (fcntl(fd, F_SETFL, flags) == -1) {
@@ -81,10 +86,12 @@ int anetSetBlock(char *err, int fd, int non_block) {
     return ANET_OK;
 }
 
+// 非阻塞
 int anetNonBlock(char *err, int fd) {
     return anetSetBlock(err,fd,1);
 }
 
+// 阻塞
 int anetBlock(char *err, int fd) {
     return anetSetBlock(err,fd,0);
 }
@@ -92,6 +99,7 @@ int anetBlock(char *err, int fd) {
 /* Set TCP keep alive option to detect dead peers. The interval option
  * is only used for Linux as we are using Linux-specific APIs to set
  * the probe send time, interval, and count. */
+// 设置keep alive
 int anetKeepAlive(char *err, int fd, int interval)
 {
     int val = 1;
@@ -200,6 +208,7 @@ int anetSendTimeout(char *err, int fd, long long ms) {
  * If flags is set to ANET_IP_ONLY the function only resolves hostnames
  * that are actually already IPv4 or IPv6 addresses. This turns the function
  * into a validating / normalizing function. */
+//
 int anetGenericResolve(char *err, char *host, char *ipbuf, size_t ipbuf_len,
                        int flags)
 {

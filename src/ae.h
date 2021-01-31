@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// 事件结构和接口
+// 事件驱动实现，事件结构和接口
 
 #ifndef __AE_H__
 #define __AE_H__
@@ -99,18 +99,19 @@ typedef struct aeFiredEvent {
 } aeFiredEvent;
 
 /* State of an event based program */
+/* 事件驱动Loop原型 */
 typedef struct aeEventLoop {
     int maxfd;   /* highest file descriptor currently registered */ /* 当前注册的最大文件描述符 */
     int setsize; /* max number of file descriptors tracked */ /* 最大文件描述符数量 */
     long long timeEventNextId;  // 下个时间事件id
     time_t lastTime;     /* Used to detect system clock skew */
-    aeFileEvent *events; /* Registered events */ /* */
-    aeFiredEvent *fired; /* Fired events */
-    aeTimeEvent *timeEventHead;
+    aeFileEvent *events; /* Registered events */ /* 注册事件 */
+    aeFiredEvent *fired; /* Fired events */     /* 被处理事件 */
+    aeTimeEvent *timeEventHead; /* 时间事件 */
     int stop;
     void *apidata; /* This is used for polling API specific data */
-    aeBeforeSleepProc *beforesleep;
-    aeBeforeSleepProc *aftersleep;
+    aeBeforeSleepProc *beforesleep; /* 睡眠前事件 */
+    aeBeforeSleepProc *aftersleep;  /* 睡眠后事件 */
 } aeEventLoop;
 
 /* Prototypes */

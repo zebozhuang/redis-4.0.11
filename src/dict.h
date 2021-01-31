@@ -158,9 +158,9 @@ int dictReplace(dict *d, void *key, void *val);       // 字典代替
 int dictDelete(dict *d, const void *key);             // 字典删除
 dictEntry *dictUnlink(dict *ht, const void *key);     // 字典unlink
 void dictFreeUnlinkedEntry(dict *d, dictEntry *he);
-void dictRelease(dict *d);
-dictEntry * dictFind(dict *d, const void *key);
-void *dictFetchValue(dict *d, const void *key);
+void dictRelease(dict *d);  // 释放字典
+dictEntry * dictFind(dict *d, const void *key);  // 字典查找
+void *dictFetchValue(dict *d, const void *key);  // 字典查找值
 int dictResize(dict *d);
 dictIterator *dictGetIterator(dict *d);
 dictIterator *dictGetSafeIterator(dict *d);

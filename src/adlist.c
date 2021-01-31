@@ -43,8 +43,10 @@ list *listCreate(void)
 {
     struct list *list;
 
+    /* 申请内存 */
     if ((list = zmalloc(sizeof(*list))) == NULL)
         return NULL;
+    /* 头部、尾部指正为空, 长度、函数初始化 */
     list->head = list->tail = NULL;
     list->len = 0;
     list->dup = NULL;
@@ -361,8 +363,7 @@ void listRotate(list *list) {
 
 /* Add all the elements of the list 'o' at the end of the
  * list 'l'. The list 'other' remains empty but otherwise valid. */
-// 列表列表合并
-
+// 列表列表合并：o接在l后面
 void listJoin(list *l, list *o) {
     if (o->head)
         o->head->prev = l->tail;

@@ -31,30 +31,39 @@
 
 #include <sys/epoll.h>
 
+/* epoll实现ae的接口 */
 typedef struct aeApiState {
-    int epfd;
-    struct epoll_event *events;
+    int epfd; /* 文件句柄 */
+    struct epoll_event *events;  /* 事件 */
 } aeApiState;
 
-static int aeApiCreate(aeEventLoop *eventLoop) {
-    aeApiState *state = zmalloc(sizeof(aeApiState));
 
+/* 创建事件接口状态，参数是事件Loop */
+static int aeApiCreate(aeEventLoop *eventLoop) {
+    /* 创建api状态 */
+    aeApiState *state = zmalloc(sizeof(aeApiState));
+    /* 创建不成功，返回-1 */
     if (!state) return -1;
+
+    /* 创建事件，初始化事大小 */
     state->events = zmalloc(sizeof(struct epoll_event)*eventLoop->setsize);
-    if (!state->events) {
+    if (!state->events) { /* 如果失败，释放状态实体, 返回-1 */
         zfree(state);
         return -1;
     }
+    /* 创建epoll */
     state->epfd = epoll_create(1024); /* 1024 is just a hint for the kernel */
     if (state->epfd == -1) {
         zfree(state->events);
         zfree(state);
         return -1;
     }
+    // state保存在loop
     eventLoop->apidata = state;
     return 0;
 }
 
+/* 重新申请state的大小 */
 static int aeApiResize(aeEventLoop *eventLoop, int setsize) {
     aeApiState *state = eventLoop->apidata;
 
@@ -62,14 +71,19 @@ static int aeApiResize(aeEventLoop *eventLoop, int setsize) {
     return 0;
 }
 
+/* 释放state */
 static void aeApiFree(aeEventLoop *eventLoop) {
     aeApiState *state = eventLoop->apidata;
 
+    /* 关闭句柄 */
     close(state->epfd);
+    /* 释放事件 */
     zfree(state->events);
+    /* 释放状态 */
     zfree(state);
 }
 
+/* 添加事件 */
 static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     aeApiState *state = eventLoop->apidata;
     struct epoll_event ee = {0}; /* avoid valgrind warning */
@@ -78,20 +92,25 @@ static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     int op = eventLoop->events[fd].mask == AE_NONE ?
             EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
+    /* 合并旧事件 */
     ee.events = 0;
     mask |= eventLoop->events[fd].mask; /* Merge old events */
     if (mask & AE_READABLE) ee.events |= EPOLLIN;
     if (mask & AE_WRITABLE) ee.events |= EPOLLOUT;
+    /* 注册事件和句柄 */
     ee.data.fd = fd;
     if (epoll_ctl(state->epfd,op,fd,&ee) == -1) return -1;
     return 0;
 }
 
+/* 删除事件 */
 static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {
     aeApiState *state = eventLoop->apidata;
     struct epoll_event ee = {0}; /* avoid valgrind warning */
+    /* 去掉要删除的事件 */
     int mask = eventLoop->events[fd].mask & (~delmask);
 
+    /* 注册事件 */
     ee.events = 0;
     if (mask & AE_READABLE) ee.events |= EPOLLIN;
     if (mask & AE_WRITABLE) ee.events |= EPOLLOUT;
@@ -105,6 +124,7 @@ static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {
     }
 }
 
+/* 监听事件 */
 static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     aeApiState *state = eventLoop->apidata;
     int retval, numevents = 0;
