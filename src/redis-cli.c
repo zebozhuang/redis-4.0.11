@@ -660,21 +660,26 @@ static int cliConnect(int force) {
          * in order to prevent timeouts caused by the execution of long
          * commands. At the same time this improves the detection of real
          * errors. */
+        /* 设置keepalive */
         anetKeepAlive(NULL, context->fd, REDIS_CLI_KEEPALIVE_INTERVAL);
 
+        /* 认证 */
         /* Do AUTH and select the right DB. */
         if (cliAuth() != REDIS_OK)
             return REDIS_ERR;
+        /* 选择db */
         if (cliSelect() != REDIS_OK)
             return REDIS_ERR;
     }
     return REDIS_OK;
 }
 
+/* 打印上下文错误 */
 static void cliPrintContextError(void) {
     if (context == NULL) return;
     fprintf(stderr,"Error: %s\n",context->errstr);
 }
+
 
 static sds cliFormatReplyTTY(redisReply *r, char *prefix) {
     sds out = sdsempty();
@@ -954,6 +959,7 @@ static int cliReadReply(int output_raw_strings) {
     return REDIS_OK;
 }
 
+/* 客户端发送命令 */
 static int cliSendCommand(int argc, char **argv, long repeat) {
     char *command = argv[0];
     size_t *argvlen;
