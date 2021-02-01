@@ -326,6 +326,7 @@ typedef struct {
 static helpEntry *helpEntries;
 static int helpEntriesLen;
 
+/* 客户端版本 */
 static sds cliVersion(void) {
     sds version;
     version = sdscatprintf(sdsempty(), "%s", REDIS_VERSION);
@@ -340,6 +341,7 @@ static sds cliVersion(void) {
     return version;
 }
 
+/* 初始化帮助 */
 static void cliInitHelp(void) {
     int commandslen = sizeof(commandHelp)/sizeof(struct commandHelp);
     int groupslen = sizeof(commandGroups)/sizeof(char*);
@@ -428,6 +430,7 @@ static void cliIntegrateHelp(void) {
 }
 
 /* Output command help to stdout. */
+/* 输出命令帮组到输出流 */
 static void cliOutputCommandHelp(struct commandHelp *help, int group) {
     printf("\r\n  \x1b[1m%s\x1b[0m \x1b[90m%s\x1b[0m\r\n", help->name, help->params);
     printf("  \x1b[33msummary:\x1b[0m %s\r\n", help->summary);
@@ -438,6 +441,7 @@ static void cliOutputCommandHelp(struct commandHelp *help, int group) {
 }
 
 /* Print generic help. */
+/* 打印帮助页 */
 static void cliOutputGenericHelp(void) {
     sds version = cliVersion();
     printf(
@@ -458,6 +462,7 @@ static void cliOutputGenericHelp(void) {
 }
 
 /* Output all command help, filtering by group or command name. */
+/* 打印所有命令帮助 */
 static void cliOutputHelp(int argc, char **argv) {
     int i, j, len;
     int group = -1;
@@ -503,6 +508,7 @@ static void cliOutputHelp(int argc, char **argv) {
 }
 
 /* Linenoise completion callback. */
+/* 补全回调 */
 static void completionCallback(const char *buf, linenoiseCompletions *lc) {
     size_t startpos = 0;
     int mask;
@@ -588,19 +594,25 @@ static void freeHintsCallback(void *ptr) {
  *--------------------------------------------------------------------------- */
 
 /* Send AUTH command to the server */
+/* 发送认证命令到服务器
+ * AUTH authStr
+ * */
 static int cliAuth(void) {
     redisReply *reply;
     if (config.auth == NULL) return REDIS_OK;
 
     reply = redisCommand(context,"AUTH %s",config.auth);
     if (reply != NULL) {
-        freeReplyObject(reply);
+        freeReplyObject(reply); // 释放内存
         return REDIS_OK;
     }
     return REDIS_ERR;
 }
 
 /* Send SELECT dbnum to the server */
+/* 发送SELECT db到服务器
+ * SELECT dbnum
+ * */
 static int cliSelect(void) {
     redisReply *reply;
     if (config.dbnum == 0) return REDIS_OK;
@@ -617,6 +629,7 @@ static int cliSelect(void) {
 
 /* Connect to the server. If force is not zero the connection is performed
  * even if there is already a connected socket. */
+/* 客户端连接 */
 static int cliConnect(int force) {
     if (context == NULL || force) {
         if (context != NULL) {
@@ -624,8 +637,11 @@ static int cliConnect(int force) {
         }
 
         if (config.hostsocket == NULL) {
+            /* 通过hostip+端口连接
+             */
             context = redisConnect(config.hostip,config.hostport);
         } else {
+            /* 通过socket连接 */
             context = redisConnectUnix(config.hostsocket);
         }
 
