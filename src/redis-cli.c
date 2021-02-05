@@ -1221,6 +1221,7 @@ static int parseOptions(int argc, char **argv) {
     return i;
 }
 
+/* 从输入流读取参数 */
 static sds readArgFromStdin(void) {
     char buf[1024];
     sds arg = sdsempty();
@@ -1238,6 +1239,7 @@ static sds readArgFromStdin(void) {
     return arg;
 }
 
+/* 使用提示 */
 static void usage(void) {
     sds version = cliVersion();
     fprintf(stderr,
@@ -1314,6 +1316,7 @@ static void usage(void) {
 }
 
 /* Turn the plain C strings into Sds strings */
+/* 转换字符串数据为Sds字符串*/
 static char **convertToSds(int count, char** args) {
   int j;
   char **sds = zmalloc(sizeof(char*)*count);
