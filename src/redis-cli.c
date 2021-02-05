@@ -1067,6 +1067,7 @@ static int cliSendCommand(int argc, char **argv, long repeat) {
 }
 
 /* Send a command reconnecting the link if needed. */
+/* 重新连接： 发送命令 */
 static redisReply *reconnectingRedisCommand(redisContext *c, const char *fmt, ...) {
     redisReply *reply = NULL;
     int tries = 0;
@@ -1079,7 +1080,9 @@ static redisReply *reconnectingRedisCommand(redisContext *c, const char *fmt, ..
             printf("Reconnecting... %d\r", ++tries);
             fflush(stdout);
 
+            /*释放客户端*/
             redisFree(c);
+            /*重新连接*/
             c = redisConnect(config.hostip,config.hostport);
             usleep(1000000);
         }
@@ -1103,7 +1106,8 @@ static redisReply *reconnectingRedisCommand(redisContext *c, const char *fmt, ..
 /*------------------------------------------------------------------------------
  * User interface
  *--------------------------------------------------------------------------- */
-
+/*用户接口*/
+/*分析参数选项*/
 static int parseOptions(int argc, char **argv) {
     int i;
 
